@@ -62,6 +62,9 @@ function updateLists() {
     sections.forEach((section, sectionIndex) => {
         const details = document.createElement("details");
 
+        // Toutes les sections sont ouvertes
+        details.open = true;
+
         const summary = document.createElement("summary");
         summary.textContent = section.name;
 
@@ -87,7 +90,9 @@ function updateLists() {
 
             checkbox.addEventListener("change", () => {
                 if (checkbox.checked) {
-                    checkedItems.push(id);
+                    if (!checkedItems.includes(id)) {
+                        checkedItems.push(id);
+                    }
                 } else {
                     checkedItems = checkedItems.filter(
                         itemId => itemId !== id
