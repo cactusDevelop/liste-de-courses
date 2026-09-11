@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma liste</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .item-text {
+            font-size: 18px;
+        }
+
+        .checked .item-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        #checked-list {
+            margin-top: 30px;
+        }
+
+        #checked-list li {
+            background: #e5e5e5;
+        }
+
+        .empty {
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Ma liste</h1>
+
+    <h2>À faire</h2>
+    <ul id="todo-list"></ul>
+
+    <h2>Fait</h2>
+    <ul id="checked-list"></ul>
+
+    <script>
+        const items = [
+            "Acheter du lait",
+            "Acheter des œufs",
+            "Acheter du beurre",
+            "Acheter de la farine",
+            "Acheter du chocolat"
+        ];
+
+        const todoList = document.getElementById("todo-list");
+        const checkedList = document.getElementById("checked-list");
+
+        function createItem(text, checked = false) {
+            const li = document.createElement("li");
+
+            if (checked) {
+                li.classList.add("checked");
+            }
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = checked;
+
+            const span = document.createElement("span");
+            span.className = "item-text";
+            span.textContent = text;
+
+            checkbox.addEventListener("change", () => {
+                updateLists();
+            });
+
+            li.appendChild(checkbox);
+            li.appendChild(span);
+
+            return li;
+        }
+
+        function updateLists() {
+            const allItems = [];
+
+            document.querySelectorAll("#todo-list li, #checked-list li").forEach(li => {
+                allItems.push({
+                    text: li.querySelector(".item-text").textContent,
+                    checked: li.querySelector("input").checked
+                });
+            });
+
+            todoList.innerHTML = "";
+            checkedList.innerHTML = "";
+
+            allItems.forEach(item => {
+                const element = createItem(item.text, item.checked);
+
+                if (item.checked) {
+                    checkedList.appendChild(element);
+                } else {
+                    todoList.appendChild(element);
+                }
+            });
+
+            if (checkedList.children.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty";
+                empty.textContent = "Rien de fait pour l'instant.";
+                checkedList.appendChild(empty);
+            }
+        }
+
+        // Initialisation
+        items.forEach(item => {
+            todoList.appendChild(createItem(item));
+        });
+
+        updateLists();
+    </script>
+
+</body>
+</html>
