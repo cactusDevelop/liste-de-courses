@@ -1,3 +1,4 @@
+```javascript
 const sections = [
     {
         name: "Fruits & légumes",
@@ -50,72 +51,133 @@ const sections = [
         ]
     }
 ];
+
+
 const container = document.getElementById("store-sections");
 
+
+// Charger les cases cochées
 let checkedItems = JSON.parse(
     localStorage.getItem("checkedItems") || "[]"
 );
 
+
+// Charger l'état ouvert/fermé des sections
+let sectionStates = JSON.parse(
+    localStorage.getItem("sectionStates") || "null"
+);
+
+
+// Au premier chargement : toutes les sections sont ouvertes
+if (sectionStates === null) {
+    sectionStates = sections.map(() => true);
+}
+
+
 function updateLists() {
+
     container.innerHTML = "";
 
     sections.forEach((section, sectionIndex) => {
+
         const details = document.createElement("details");
 
-        // Toutes les sections sont ouvertes
-        details.open = true;
+        // Restaurer l'état ouvert/fermé
+        details.open = sectionStates[sectionIndex];
+
+
+        // Sauvegarder l'état lorsque l'utilisateur
+        // ouvre ou ferme cette section
+        details.addEventListener("toggle", () => {
+
+            sectionStates[sectionIndex] = details.open;
+
+            localStorage.setItem(
+                "sectionStates",
+                JSON.stringify(sectionStates)
+            );
+        });
+
 
         const summary = document.createElement("summary");
         summary.textContent = section.name;
 
+
         const ul = document.createElement("ul");
 
+
         section.items.forEach((text, itemIndex) => {
+
             const id = `${sectionIndex}-${itemIndex}`;
+
             const isChecked = checkedItems.includes(id);
 
+
             const li = document.createElement("li");
+
 
             if (isChecked) {
                 li.classList.add("checked");
             }
 
+
             const checkbox = document.createElement("input");
+
             checkbox.type = "checkbox";
             checkbox.checked = isChecked;
 
+
             const span = document.createElement("span");
+
             span.className = "item-text";
             span.textContent = text;
 
+
             checkbox.addEventListener("change", () => {
+
                 if (checkbox.checked) {
+
                     if (!checkedItems.includes(id)) {
                         checkedItems.push(id);
                     }
+
                 } else {
+
                     checkedItems = checkedItems.filter(
                         itemId => itemId !== id
                     );
                 }
 
+
+                // Sauvegarder les cases cochées
                 localStorage.setItem(
                     "checkedItems",
                     JSON.stringify(checkedItems)
                 );
 
+
+                // Reconstruire la liste.
+                // Les états des sections sont restaurés
+                // depuis sectionStates.
                 updateLists();
             });
 
+
             li.appendChild(checkbox);
             li.appendChild(span);
+
             ul.appendChild(li);
         });
 
+
         details.appendChild(summary);
         details.appendChild(ul);
+
         container.appendChild(details);
     });
 }
 
+
+// Affichage initial
 updateLists();
+```
