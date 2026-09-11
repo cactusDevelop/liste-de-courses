@@ -1,93 +1,136 @@
-const items = [
-    "Acheter du lait",
-    "Acheter des œufs",
-    "Acheter du beurre",
-    "Acheter de la farine",
-    "Acheter du chocolat"
+const sections = [
+    {
+        name: "Fruits et légumes",
+        items: [
+            "Pommes",
+            "Bananes",
+            "Carottes",
+            "Tomates"
+        ]
+    },
+
+    {
+        name: "Produits frais",
+        items: [
+            "Lait",
+            "Œufs",
+            "Beurre",
+            "Yaourts"
+        ]
+    },
+
+    {
+        name: "Épicerie",
+        items: [
+            "Farine",
+            "Sucre",
+            "Pâtes",
+            "Riz"
+        ]
+    },
+
+    {
+        name: "Boulangerie",
+        items: [
+            "Pain",
+            "Croissants"
+        ]
+    }
 ];
 
-const todoList = document.getElementById("todo-list");
-const checkedList = document.getElementById("checked-list");
+
+const container = document.getElementById("store-sections");
 
 
-// Charger les cases cochées sauvegardées
+// Charger les cases cochées
 let checkedItems = JSON.parse(
     localStorage.getItem("checkedItems") || "[]"
 );
 
 
-// Afficher la liste
+// Créer les sections
 function updateLists() {
 
-    todoList.innerHTML = "";
-    checkedList.innerHTML = "";
+    container.innerHTML = "";
 
-    items.forEach((text, index) => {
+    sections.forEach((section, sectionIndex) => {
 
-        const isChecked = checkedItems.includes(index);
+        const details = document.createElement("details");
 
-        const li = document.createElement("li");
-
-        if (isChecked) {
-            li.classList.add("checked");
+        // Le premier magasin est ouvert au départ
+        if (sectionIndex === 0) {
+            details.open = true;
         }
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = isChecked;
+        const summary = document.createElement("summary");
+        summary.textContent = section.name;
 
-        const span = document.createElement("span");
-        span.className = "item-text";
-        span.textContent = text;
+        details.appendChild(summary);
 
-        checkbox.addEventListener("change", () => {
 
-            if (checkbox.checked) {
+        const ul = document.createElement("ul");
 
-                if (!checkedItems.includes(index)) {
-                    checkedItems.push(index);
-                }
 
-            } else {
+        section.items.forEach((text, itemIndex) => {
 
-                checkedItems = checkedItems.filter(
-                    itemIndex => itemIndex !== index
-                );
+            const id = `${sectionIndex}-${itemIndex}`;
+            const isChecked = checkedItems.includes(id);
 
+            const li = document.createElement("li");
+
+            if (isChecked) {
+                li.classList.add("checked");
             }
 
-            // Sauvegarder dans le navigateur
-            localStorage.setItem(
-                "checkedItems",
-                JSON.stringify(checkedItems)
-            );
 
-            updateLists();
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = isChecked;
+
+
+            const span = document.createElement("span");
+            span.className = "item-text";
+            span.textContent = text;
+
+
+            checkbox.addEventListener("change", () => {
+
+                if (checkbox.checked) {
+
+                    if (!checkedItems.includes(id)) {
+                        checkedItems.push(id);
+                    }
+
+                } else {
+
+                    checkedItems = checkedItems.filter(
+                        itemId => itemId !== id
+                    );
+
+                }
+
+
+                localStorage.setItem(
+                    "checkedItems",
+                    JSON.stringify(checkedItems)
+                );
+
+
+                updateLists();
+            });
+
+
+            li.appendChild(checkbox);
+            li.appendChild(span);
+
+            ul.appendChild(li);
         });
 
-        li.appendChild(checkbox);
-        li.appendChild(span);
 
-
-        if (isChecked) {
-            checkedList.appendChild(li);
-        } else {
-            todoList.appendChild(li);
-        }
+        details.appendChild(ul);
+        container.appendChild(details);
     });
-
-
-    // Message lorsqu'il n'y a encore rien d'acheté
-    if (checkedList.children.length === 0) {
-
-        const empty = document.createElement("li");
-        empty.className = "empty";
-        empty.textContent = "Rien d'acheté pour l'instant.";
-
-        checkedList.appendChild(empty);
-    }
 }
 
 
-// Affichage initial
 updateLists();
