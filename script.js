@@ -1,4 +1,3 @@
-```javascript
 const sections = [
     {
         name: "Fruits & légumes",
@@ -56,21 +55,30 @@ const sections = [
 const container = document.getElementById("store-sections");
 
 
-// Charger les cases cochées
+// Cases cochées
 let checkedItems = JSON.parse(
     localStorage.getItem("checkedItems") || "[]"
 );
 
 
-// Charger l'état ouvert/fermé des sections
+// État ouvert/fermé des sections
 let sectionStates = JSON.parse(
     localStorage.getItem("sectionStates") || "null"
 );
 
 
-// Au premier chargement : toutes les sections sont ouvertes
-if (sectionStates === null) {
+// Première visite : toutes les sections sont ouvertes
+if (
+    sectionStates === null ||
+    !Array.isArray(sectionStates) ||
+    sectionStates.length !== sections.length
+) {
     sectionStates = sections.map(() => true);
+
+    localStorage.setItem(
+        "sectionStates",
+        JSON.stringify(sectionStates)
+    );
 }
 
 
@@ -82,12 +90,11 @@ function updateLists() {
 
         const details = document.createElement("details");
 
-        // Restaurer l'état ouvert/fermé
+        // Restaurer l'état de cette section
         details.open = sectionStates[sectionIndex];
 
 
-        // Sauvegarder l'état lorsque l'utilisateur
-        // ouvre ou ferme cette section
+        // Sauvegarder lorsque l'utilisateur ouvre ou ferme
         details.addEventListener("toggle", () => {
 
             sectionStates[sectionIndex] = details.open;
@@ -114,7 +121,6 @@ function updateLists() {
 
 
             const li = document.createElement("li");
-
 
             if (isChecked) {
                 li.classList.add("checked");
@@ -157,8 +163,8 @@ function updateLists() {
 
 
                 // Reconstruire la liste.
-                // Les états des sections sont restaurés
-                // depuis sectionStates.
+                // L'état ouvert/fermé est restauré
+                // grâce à sectionStates.
                 updateLists();
             });
 
@@ -180,4 +186,3 @@ function updateLists() {
 
 // Affichage initial
 updateLists();
-```
