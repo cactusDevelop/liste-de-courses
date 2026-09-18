@@ -3,7 +3,14 @@ const path = require("node:path");
 const fsSync = require("node:fs");
 const { execFile } = require("node:child_process");
 const util = require("node:util");
-const { readSections, writeSections } = require("./data-store");
+const {
+    readSections,
+    writeSections,
+    listSavedLists,
+    readSavedList,
+    writeSavedList,
+    renameSavedList
+} = require("./data-store");
 
 const execFileAsync = util.promisify(execFile);
 
@@ -141,23 +148,24 @@ ipcMain.handle("git:publish", async (_event, { sections, message }) => {
         await writeSections(path.join(root, "data.json"), sections);
         log.push("data.json enregistré.");
 
-        await execFileAsync("git", ["add", "--", "data.json"], { cwd: root });
+        // -A : on publie tout le dépôt (pas seulement data.json), pour que
+        // "Publier" suffise même quand d'autres fichiers du site ont changé
+        // (ex. index.html/script.js/style.css) sans passer par cette app.
+        await execFileAsync("git", ["add", "-A"], { cwd: root });
 
         const status = await execFileAsync(
-            "git", ["status", "--porcelain", "--", "data.json"], { cwd: root }
+            "git", ["status", "--porcelain"], { cwd: root }
         );
 
         if (!status.stdout.trim()) {
-            log.push("Aucun changement à publier (data.json est déjà à jour sur Git).");
+            log.push("Aucun changement à publier (le dépôt est déjà à jour sur Git).");
             return { ok: true, log, pushed: false };
         }
 
         const commitMessage = (message && message.trim()) || "Mise à jour de la liste de courses";
 
-        // Le pathspec final limite le commit à data.json, même si d'autres
-        // fichiers sont par ailleurs indexés (staged) dans le dépôt.
         const commit = await execFileAsync(
-            "git", ["commit", "-m", commitMessage, "--", "data.json"], { cwd: root }
+            "git", ["commit", "-m", commitMessage], { cwd: root }
         );
         log.push(commit.stdout.trim() || "Commit effectué.");
 
@@ -176,12 +184,26 @@ ipcMain.handle("git:status", async () => {
     try {
         const root = requireRepoRoot();
         const { stdout } = await execFileAsync(
-            "git", ["status", "--porcelain", "--", "data.json"], { cwd: root }
+            "git", ["status", "--porcelain"], { cwd: root }
         );
         return { ok: true, dirty: stdout.trim().length > 0 };
     } catch (err) {
         return { ok: false, error: describeError(err) };
     }
+});
+
+ipcMain.handle("lists:list", () => listSavedLists(requireRepoRoot()));
+
+ipcMain.handle("lists:load", (_event, name) => readSavedList(requireRepoRoot(), name));
+
+ipcMain.handle("lists:save", async (_event, { name, sections }) => {
+    await writeSavedList(requireRepoRoot(), name, sections);
+    return { ok: true };
+});
+
+ipcMain.handle("lists:rename", async (_event, { oldName, newName }) => {
+    await renameSavedList(requireRepoRoot(), oldName, newName);
+    return { ok: true };
 });
 
 ipcMain.handle("repo:current", () => repoRoot);

@@ -8,10 +8,17 @@ const logPanel = document.getElementById("log-panel");
 const logOutput = document.getElementById("log-output");
 const repoPathText = document.getElementById("repo-path-text");
 const changeRepoBtn = document.getElementById("change-repo-btn");
+const savedListsUl = document.getElementById("saved-lists-ul");
+const saveAsListBtn = document.getElementById("save-as-list-btn");
+const newListBtn = document.getElementById("new-list-btn");
+const listContextMenu = document.getElementById("list-context-menu");
+const contextRenameBtn = document.getElementById("context-rename-btn");
 
 let sections = [];
 let dirty = false;
 let pendingFocus = null; // { sectionIndex, itemIndex | "name" }
+let activeListName = null; // nom de la liste enregistrée actuellement chargée, si applicable
+let contextMenuTarget = null; // nom de la liste ciblée par le menu contextuel
 
 
 function setStatus(text, kind) {
@@ -310,8 +317,160 @@ changeRepoBtn.addEventListener("click", async () => {
 });
 
 
+async function refreshSavedLists() {
+    let names = [];
+    try {
+        names = await window.api.listSavedLists();
+    } catch (err) {
+        showLog([String(err.message || err)], true);
+        return;
+    }
+
+    savedListsUl.innerHTML = "";
+
+    if (names.length === 0) {
+        const empty = document.createElement("li");
+        empty.id = "saved-lists-empty";
+        empty.textContent = "Aucune liste enregistrée pour l'instant.";
+        savedListsUl.appendChild(empty);
+        return;
+    }
+
+    names.forEach((name) => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.dataset.name = name;
+        li.classList.toggle("active", name === activeListName);
+
+        li.addEventListener("click", () => loadSavedList(name));
+        li.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            openListContextMenu(name, e.clientX, e.clientY);
+        });
+
+        savedListsUl.appendChild(li);
+    });
+}
+
+async function loadSavedList(name) {
+    if (dirty && !window.confirm("Des modifications non enregistrées seront perdues. Charger cette liste quand même ?")) {
+        return;
+    }
+    try {
+        sections = await window.api.loadSavedList(name);
+        activeListName = name;
+        setDirty(false);
+        render();
+        await refreshSavedLists();
+        showLog([`Liste « ${name} » chargée.`], false);
+    } catch (err) {
+        setStatus("Impossible de charger cette liste", "error");
+        showLog([String(err.message || err)], true);
+    }
+}
+
+saveAsListBtn.addEventListener("click", async () => {
+    const name = window.prompt("Nom de la liste à enregistrer :", activeListName || "");
+    if (!name || !name.trim()) return;
+
+    try {
+        const trimmed = name.trim();
+        await window.api.saveSavedList(trimmed, sections);
+        activeListName = trimmed;
+        await refreshSavedLists();
+        showLog([`Liste enregistrée sous « ${trimmed} ».`], false);
+    } catch (err) {
+        showLog([String(err.message || err)], true);
+    }
+});
+
+newListBtn.addEventListener("click", () => {
+    if (dirty && !window.confirm("Des modifications non enregistrées seront perdues. Créer une nouvelle liste vide ?")) {
+        return;
+    }
+    sections = [];
+    activeListName = null;
+    markChanged();
+    refreshSavedLists();
+});
+
+function openListContextMenu(name, x, y) {
+    contextMenuTarget = name;
+    listContextMenu.style.left = `${x}px`;
+    listContextMenu.style.top = `${y}px`;
+    listContextMenu.hidden = false;
+}
+
+function closeListContextMenu() {
+    listContextMenu.hidden = true;
+    contextMenuTarget = null;
+}
+
+document.addEventListener("click", (e) => {
+    if (!listContextMenu.hidden && !listContextMenu.contains(e.target)) {
+        closeListContextMenu();
+    }
+});
+
+contextRenameBtn.addEventListener("click", () => {
+    const name = contextMenuTarget;
+    closeListContextMenu();
+    if (!name) return;
+    startInlineRename(name);
+});
+
+function startInlineRename(name) {
+    const li = Array.from(savedListsUl.querySelectorAll("li")).find((el) => el.dataset.name === name);
+    if (!li) return;
+
+    li.textContent = "";
+    li.classList.add("rename-mode");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "rename-input";
+    input.value = name;
+    li.appendChild(input);
+    input.focus();
+    input.select();
+
+    let settled = false;
+
+    const commit = async () => {
+        if (settled) return;
+        settled = true;
+
+        const newName = input.value.trim();
+        if (!newName || newName === name) {
+            await refreshSavedLists();
+            return;
+        }
+
+        try {
+            await window.api.renameSavedList(name, newName);
+            if (activeListName === name) activeListName = newName;
+        } catch (err) {
+            showLog([String(err.message || err)], true);
+        }
+        await refreshSavedLists();
+    };
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            input.blur();
+        } else if (e.key === "Escape") {
+            settled = true; // annule sans renommer
+            refreshSavedLists();
+        }
+    });
+
+    input.addEventListener("blur", commit);
+}
+
+
 async function init() {
     await refreshRepoPathDisplay();
+    await refreshSavedLists();
     try {
         sections = await window.api.loadData();
         setDirty(false);
