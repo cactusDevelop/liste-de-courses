@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Fruits & légumes",
+    "items": [
+      "Fruits de saison",
+      "Champignons"
+    ]
+  },
+  {
+    "name": "Produits frais",
+    "items": [
+      "Œufs",
+      "Yaourt nature",
+      "Tofu",
+      "Aiguillettes poulet/dinde",
+      "Petit fromage (e.g. brie)",
+      "Beurre doux — 220 g"
+    ]
+  },
+  {
+    "name": "Épicerie",
+    "items": [
+      "Lentilles",
+      "Céréales (quinoa/muesli)",
+      "Sucre glace/Impalpable (pas cristalisé)",
+      "Chocolat noir ≥70 %"
+    ]
+  },
+  {
+    "name": "Boissons",
+    "items": [
+      "Jus"
+    ]
+  },
+  {
+    "name": "Boulangerie",
+    "items": [
+      "Papier cuisson de bonne qualité"
+    ]
+  }
+]
