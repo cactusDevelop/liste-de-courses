@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Liste de courses — Éditeur</title>
+
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="editor.css">
+</head>
+
+<body>
+
+    <h1>Liste de courses — Éditeur</h1>
+
+    <div id="repo-path-bar">
+        <span id="repo-path-text">Dossier : …</span>
+        <button id="change-repo-btn" type="button">Changer de dossier…</button>
+    </div>
+
+    <div id="toolbar">
+        <button id="add-section-btn" type="button">+ Nouveau rayon</button>
+
+        <div id="toolbar-spacer"></div>
+
+        <span id="status-text">Chargement…</span>
+
+        <input id="commit-message" type="text" placeholder="Mise à jour de la liste de courses">
+
+        <button id="save-btn" type="button">Enregistrer</button>
+        <button id="publish-btn" type="button" class="primary">Publier sur le site</button>
+    </div>
+
+    <div id="store-sections"></div>
+
+    <div id="log-panel" hidden>
+        <h2>Journal</h2>
+        <pre id="log-output"></pre>
+    </div>
+
+    <script src="editor.js"></script>
+</body>
+</html>

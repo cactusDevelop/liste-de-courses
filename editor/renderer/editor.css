@@ -1,0 +1,222 @@
+/* Styles additionnels de l'éditeur, au-dessus de style.css (le style du site). */
+
+#repo-path-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+#repo-path-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#change-repo-btn {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+#toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f5f5f5;
+    padding: 10px 0;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+#toolbar-spacer {
+    flex: 1;
+}
+
+#status-text {
+    font-size: 14px;
+    color: #888;
+}
+
+#status-text.dirty {
+    color: #b45309;
+}
+
+#status-text.error {
+    color: #c0392b;
+}
+
+#commit-message {
+    flex: 1 1 220px;
+    min-width: 160px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+button {
+    font-size: 14px;
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f0f0f0;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+button.primary {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: white;
+}
+
+button.primary:hover {
+    background: #256428;
+}
+
+/* Rayons */
+.editor-section {
+    background: white;
+    margin: 12px 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.editor-section.drag-over {
+    outline: 2px dashed #2e7d32;
+    outline-offset: -2px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+}
+
+.section-name-input {
+    flex: 1;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.section-name-input:hover,
+.section-name-input:focus {
+    background: #eeeeee;
+    outline: none;
+}
+
+/* Articles */
+.editor-section ul {
+    list-style: none;
+    padding: 0 15px 15px 15px;
+    margin: 0;
+}
+
+.editor-item {
+    background: #f5f5f5;
+    padding: 6px 12px;
+    margin: 7px 0;
+    border-radius: 7px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.editor-item.drag-over {
+    outline: 2px dashed #2e7d32;
+    outline-offset: -2px;
+}
+
+.drag-handle,
+.section-drag-handle {
+    cursor: grab;
+    color: #999;
+    flex-shrink: 0;
+    user-select: none;
+    font-size: 16px;
+}
+
+.item-text-input {
+    flex: 1;
+    font-size: 18px;
+    border: none;
+    background: transparent;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.item-text-input:hover,
+.item-text-input:focus {
+    background: #eeeeee;
+    outline: none;
+}
+
+.icon-btn {
+    flex-shrink: 0;
+    padding: 4px 9px;
+    border-radius: 6px;
+    line-height: 1;
+    color: #c0392b;
+    border-color: #ecc;
+}
+
+.icon-btn:hover {
+    background: #fbeaea;
+}
+
+.add-item-row {
+    background: transparent !important;
+    padding: 4px 0 !important;
+}
+
+.add-item-btn {
+    width: 100%;
+    text-align: left;
+    color: #2e7d32;
+    border-style: dashed;
+}
+
+/* Journal */
+#log-panel {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin: 20px 0;
+}
+
+#log-panel h2 {
+    font-size: 15px;
+    margin: 0 0 8px 0;
+}
+
+#log-output {
+    white-space: pre-wrap;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #333;
+    margin: 0;
+}
+
+#log-panel.error #log-output {
+    color: #c0392b;
+}

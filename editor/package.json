@@ -1,0 +1,32 @@
+{
+  "name": "liste-de-courses-editor",
+  "version": "1.0.0",
+  "description": "Éditeur WYSIWYG local pour la liste de courses (édite data.json et publie sur GitHub Pages)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.cactusdevelop.liste-de-courses-editor",
+    "productName": "Liste de courses - Editeur",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "data-store.js",
+      "renderer/**/*",
+      "!**/node_modules/electron-builder/**"
+    ],
+    "win": {
+      "target": "portable"
+    }
+  }
+}
