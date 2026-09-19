@@ -20,6 +20,53 @@ let pendingFocus = null; // { sectionIndex, itemIndex | "name" }
 let activeListName = null; // nom de la liste enregistrée actuellement chargée, si applicable
 let contextMenuTarget = null; // nom de la liste ciblée par le menu contextuel
 
+// Historique annuler/rétablir (Ctrl+Z / Ctrl+Y)
+let history = [];
+let historyIndex = -1;
+let restoringHistory = false;
+
+function cloneSections(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function resetHistory() {
+    history = [cloneSections(sections)];
+    historyIndex = 0;
+}
+
+function pushHistory() {
+    if (restoringHistory) return;
+    history = history.slice(0, historyIndex + 1);
+    history.push(cloneSections(sections));
+    historyIndex = history.length - 1;
+
+    const MAX_HISTORY = 200;
+    if (history.length > MAX_HISTORY) {
+        history.shift();
+        historyIndex--;
+    }
+}
+
+function applyHistory() {
+    restoringHistory = true;
+    sections = cloneSections(history[historyIndex]);
+    setDirty(true);
+    render();
+    restoringHistory = false;
+}
+
+function undo() {
+    if (historyIndex <= 0) return;
+    historyIndex--;
+    applyHistory();
+}
+
+function redo() {
+    if (historyIndex >= history.length - 1) return;
+    historyIndex++;
+    applyHistory();
+}
+
 
 function setStatus(text, kind) {
     statusText.textContent = text;
@@ -35,6 +82,7 @@ function setDirty(value) {
 function markChanged() {
     setDirty(true);
     render();
+    pushHistory();
 }
 
 function showLog(lines, isError) {
@@ -71,6 +119,8 @@ function createItemRow(section, sectionIndex, itemIndex) {
         section.items[itemIndex] = input.value;
         setDirty(true);
     });
+    // Un seul point d'historique par saisie (au blur), pas à chaque frappe.
+    input.addEventListener("change", () => pushHistory());
 
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
@@ -170,6 +220,7 @@ function createSectionBlock(section, sectionIndex) {
         section.name = nameInput.value;
         setDirty(true);
     });
+    nameInput.addEventListener("change", () => pushHistory());
 
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
@@ -251,12 +302,32 @@ saveBtn.addEventListener("click", async () => {
     saveBtn.disabled = true;
     try {
         const result = await window.api.saveData(sections);
-        if (result?.ok) {
-            setDirty(false);
-            showLog(["Enregistré dans data.json (en local)."], false);
-        } else {
+        if (!result?.ok) {
             throw new Error(result?.error || "Échec de l'enregistrement.");
         }
+
+        const logLines = ["Enregistré dans data.json (en local)."];
+
+        // Garde la liste enregistrée (si une est active) synchronisée avec
+        // data.json, pour que "Enregistrer" fasse aussi apparaître/mettre à
+        // jour la liste dans "Mes listes enregistrées".
+        if (activeListName) {
+            await window.api.saveSavedList(activeListName, sections);
+            logLines.push(`Liste « ${activeListName} » mise à jour.`);
+            await refreshSavedLists();
+        } else {
+            const name = window.prompt("Nom de la liste à enregistrer :", "");
+            const trimmed = name && name.trim();
+            if (trimmed) {
+                await window.api.saveSavedList(trimmed, sections);
+                activeListName = trimmed;
+                logLines.push(`Liste enregistrée sous « ${trimmed} ».`);
+                await refreshSavedLists();
+            }
+        }
+
+        setDirty(false);
+        showLog(logLines, false);
     } catch (err) {
         setStatus("Erreur lors de l'enregistrement", "error");
         showLog([String(err.message || err)], true);
@@ -285,6 +356,26 @@ publishBtn.addEventListener("click", async () => {
     } finally {
         saveBtn.disabled = false;
         publishBtn.disabled = false;
+    }
+});
+
+
+document.addEventListener("keydown", (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+
+    // Laisse le champ de message de commit et le renommage inline gérer
+    // leur propre annuler/rétablir natif du texte.
+    if (e.target === commitMessageInput || e.target.classList?.contains("rename-input")) {
+        return;
+    }
+
+    const key = e.key.toLowerCase();
+    if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault();
+        redo();
     }
 });
 
@@ -361,6 +452,7 @@ async function loadSavedList(name) {
         activeListName = name;
         setDirty(false);
         render();
+        resetHistory();
         await refreshSavedLists();
         showLog([`Liste « ${name} » chargée.`], false);
     } catch (err) {
@@ -390,7 +482,9 @@ newListBtn.addEventListener("click", () => {
     }
     sections = [];
     activeListName = null;
-    markChanged();
+    setDirty(true);
+    render();
+    resetHistory();
     refreshSavedLists();
 });
 
@@ -475,6 +569,7 @@ async function init() {
         sections = await window.api.loadData();
         setDirty(false);
         render();
+        resetHistory();
     } catch (err) {
         setStatus("Impossible de charger data.json", "error");
         showLog([String(err.message || err)], true);

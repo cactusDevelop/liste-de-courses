@@ -20,10 +20,10 @@
   {
     "name": "Épicerie",
     "items": [
-      "Lentilles",
       "Céréales (quinoa/muesli)",
       "Sucre glace/Impalpable (pas cristalisé)",
-      "Chocolat noir ≥70 %"
+      "Chocolat noir ≥70 %",
+      "Lentilles"
     ]
   },
   {
@@ -34,8 +34,6 @@
   },
   {
     "name": "Boulangerie",
-    "items": [
-      "Papier cuisson de bonne qualité"
-    ]
+    "items": []
   }
 ]
