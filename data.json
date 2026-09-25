@@ -36,5 +36,11 @@
   {
     "name": "Boulangerie",
     "items": []
+  },
+  {
+    "name": "Pharmacie",
+    "items": [
+      "Désinfectant"
+    ]
   }
 ]
