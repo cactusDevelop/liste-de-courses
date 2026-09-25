@@ -3,18 +3,19 @@
     "name": "Fruits & légumes",
     "items": [
       "Fruits de saison",
-      "Légumes de saison (Champignons, etc.)"
+      "Gros Champignons Blancs",
+      "Concombre",
+      "Poivron"
     ]
   },
   {
     "name": "Produits frais",
     "items": [
-      "Œufs",
-      "Yaourt nature",
-      "Tofu",
+      "Œufs (non)",
+      "Yaourt nature (non)",
+      "Tofu (non)",
       "Aiguillettes poulet/dinde",
-      "Petit fromage (e.g. brie)",
-      "Beurre doux — 220 g"
+      "Brie"
     ]
   },
   {
@@ -23,13 +24,13 @@
       "Céréales (quinoa/muesli)",
       "Sucre glace/Impalpable (pas cristalisé)",
       "Chocolat noir ≥70 %",
-      "Lentilles"
+      "Lentilles (non)"
     ]
   },
   {
     "name": "Boissons",
     "items": [
-      "Jus"
+      "Jus (pamplemousse ou orange)"
     ]
   },
   {
