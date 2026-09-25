@@ -67,3 +67,183 @@ input[type="checkbox"] {
     color: #888;
     text-align: center;
 }
+
+/* En-tête et bouton crayon */
+.top-bar {
+    position: relative;
+}
+
+.icon-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #555;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn[hidden] {
+    display: none;
+}
+
+.icon-btn:hover {
+    background: #e4e4e4;
+}
+
+.edit-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+}
+
+.edit-btn.active {
+    background: #2b6cb0;
+    color: white;
+}
+
+/* Mode édition : même rendu que la liste, textes modifiables sur place */
+.section {
+    background: white;
+    margin: 12px 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+}
+
+.section-name {
+    flex: 1;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+li.editing {
+    padding: 8px 8px 8px 12px;
+}
+
+li.editing .item-text {
+    flex: 1;
+}
+
+[contenteditable] {
+    outline: none;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    min-width: 1em;
+}
+
+[contenteditable]:hover {
+    background: rgba(43, 108, 176, 0.06);
+}
+
+[contenteditable]:focus {
+    background: white;
+    box-shadow: 0 0 0 2px #2b6cb0;
+}
+
+[contenteditable]:empty::before {
+    content: attr(data-placeholder);
+    color: #aaa;
+}
+
+.delete-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 22px;
+    flex-shrink: 0;
+    color: #999;
+}
+
+.delete-btn:hover {
+    color: #c53030;
+    background: #fde8e8;
+}
+
+.add-btn {
+    display: block;
+    width: calc(100% - 30px);
+    margin: 0 15px 15px;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 7px;
+    background: none;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    border-color: #2b6cb0;
+    color: #2b6cb0;
+}
+
+.add-section-btn {
+    width: 100%;
+    margin: 12px 0;
+    padding: 15px;
+    background: white;
+}
+
+/* Barre Annuler / Enregistrer, collée en bas de l'écran */
+body.edit-mode {
+    padding-bottom: 80px;
+}
+
+.edit-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px max(15px, calc((100% - 600px) / 2));
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-bar[hidden] {
+    display: none;
+}
+
+.edit-status {
+    flex: 1;
+    font-size: 14px;
+    color: #888;
+}
+
+.edit-status.error {
+    color: #c53030;
+}
+
+.edit-bar button {
+    padding: 10px 18px;
+    border-radius: 7px;
+    border: 1px solid #ccc;
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.edit-bar button.primary {
+    background: #2b6cb0;
+    border-color: #2b6cb0;
+    color: white;
+}
+
+.edit-bar button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
