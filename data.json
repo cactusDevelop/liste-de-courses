@@ -5,15 +5,16 @@
       "Fruits de saison",
       "Gros Champignons Blancs",
       "Concombre",
-      "Poivron"
+      "Poivron",
+      "Echalottes"
     ]
   },
   {
     "name": "Produits frais",
     "items": [
-      "Œufs (non)",
+      "Œufs",
       "Yaourt nature",
-      "Tofu (non)",
+      "Tofu",
       "Aiguillettes poulet/dinde",
       "Brie"
     ]
@@ -22,7 +23,6 @@
     "name": "Épicerie",
     "items": [
       "Céréales (quinoa/muesli)",
-      "Sucre glace/Impalpable (pas cristalisé)",
       "Chocolat noir ≥70 %",
       "Lentilles (non)"
     ]
