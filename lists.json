@@ -151,6 +151,55 @@
           "items": []
         }
       ]
+    },
+    {
+      "name": "Complète",
+      "sections": [
+        {
+          "name": "Fruits & légumes",
+          "items": [
+            "Fruits de saison",
+            "Gros Champignons Blancs",
+            "Concombre",
+            "Echalottes",
+            "Poivron"
+          ]
+        },
+        {
+          "name": "Produits frais",
+          "items": [
+            "Œufs",
+            "Yaourt nature",
+            "Tofu",
+            "Aiguillettes poulet/dinde",
+            "Brie"
+          ]
+        },
+        {
+          "name": "Épicerie",
+          "items": [
+            "Céréales (quinoa/muesli)",
+            "Chocolat noir ≥70 %",
+            "Lentilles"
+          ]
+        },
+        {
+          "name": "Boissons",
+          "items": [
+            "Jus (pamplemousse ou orange)"
+          ]
+        },
+        {
+          "name": "Boulangerie",
+          "items": []
+        },
+        {
+          "name": "Pharmacie",
+          "items": [
+            "Désinfectant"
+          ]
+        }
+      ]
     }
   ]
 }
