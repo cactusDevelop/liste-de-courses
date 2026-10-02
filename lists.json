@@ -20,14 +20,16 @@
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
-            "Un Fromage"
+            "Un Fromage",
+            "Parmigiano"
           ]
         },
         {
           "name": "Épicerie",
           "items": [
             "Céréales (quinoa/muesli)",
-            "Chocolat noir ≥70 %"
+            "Chocolat noir ≥70 %",
+            "Pâtes complètes"
           ]
         },
         {
