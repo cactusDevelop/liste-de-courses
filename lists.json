@@ -1,8 +1,8 @@
 {
-  "active": "Ma liste",
+  "active": "Ma liste actuelle",
   "lists": [
     {
-      "name": "Ma liste",
+      "name": "Ma liste actuelle",
       "sections": [
         {
           "name": "Fruits & légumes",
@@ -10,8 +10,7 @@
             "Fruits de saison",
             "Gros Champignons Blancs",
             "Concombre",
-            "Echalottes",
-            "Poivron"
+            "Echalottes"
           ]
         },
         {
@@ -21,15 +20,14 @@
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
-            "Brie"
+            "Un Fromage"
           ]
         },
         {
           "name": "Épicerie",
           "items": [
             "Céréales (quinoa/muesli)",
-            "Chocolat noir ≥70 %",
-            "Lentilles (non)"
+            "Chocolat noir ≥70 %"
           ]
         },
         {
