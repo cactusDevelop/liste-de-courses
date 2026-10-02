@@ -4,16 +4,24 @@ const editBar = document.getElementById("edit-bar");
 const editStatus = document.getElementById("edit-status");
 const saveBtn = document.getElementById("save-btn");
 const cancelBtn = document.getElementById("cancel-btn");
+const activeListName = document.getElementById("active-list-name");
 
+// Rayons de la liste active, affichés hors mode édition.
 let sections = [];
 
-// Version (sha GitHub) de data.json, renvoyée à l'enregistrement pour
-// détecter une modification faite ailleurs entre-temps.
-let dataSha = null;
+// Toutes les listes enregistrées : { active, lists: [{ name, template?, sections }] }.
+// Null en mode statique (pas d'API) : seule data.json est disponible.
+let store = null;
 
-// Mode édition
+// Versions (sha GitHub) de data.json et lists.json, renvoyées à
+// l'enregistrement pour détecter une modification faite ailleurs entre-temps.
+let dataVersion = null;
+
+// Mode édition : copie de travail de toutes les listes, et liste affichée.
 let editMode = false;
-let draft = [];
+let draftStore = null;
+let currentList = 0;
+let draft = []; // rayons de la liste affichée : draftStore.lists[currentList].sections
 let dirty = false;
 let saving = false;
 let pendingFocus = null; // { sectionIndex, itemIndex | "name", atEnd }
@@ -336,7 +344,8 @@ function applyPendingFocus() {
 }
 
 function enterEditMode() {
-    draft = JSON.parse(JSON.stringify(sections));
+    draftStore = JSON.parse(JSON.stringify(store));
+    showList(draftStore.lists.findIndex(list => list.name === draftStore.active));
     editMode = true;
     setDirty(false);
     render();
@@ -344,16 +353,157 @@ function enterEditMode() {
 
 function exitEditMode() {
     editMode = false;
+    draftStore = null;
     draft = [];
     setDirty(false);
     render();
 }
 
-function cleanDraft() {
-    return draft.map(section => ({
+function cleanSections(sectionList) {
+    return sectionList.map(section => ({
         name: section.name.trim(),
         items: section.items.map(item => item.trim()).filter(item => item !== "")
     }));
+}
+
+function cleanDraftStore() {
+    return {
+        active: draftStore.active,
+        lists: draftStore.lists.map(list => ({ ...list, sections: cleanSections(list.sections) }))
+    };
+}
+
+
+// ---------- Listes enregistrées (mode édition) ----------
+
+function showList(index) {
+    currentList = index;
+    draft = draftStore.lists[index].sections;
+}
+
+function askListName(message, initial, renaming) {
+
+    const name = prompt(message, initial)?.trim();
+    if (!name) return null;
+
+    const taken = draftStore.lists.some(
+        (list, index) => list.name === name && !(renaming && index === currentList)
+    );
+    if (taken) {
+        alert(`Une liste nommée « ${name} » existe déjà.`);
+        return null;
+    }
+    return name;
+}
+
+function addList(name, sectionList) {
+    draftStore.lists.push({ name, sections: sectionList });
+    showList(draftStore.lists.length - 1);
+    setDirty(true);
+    render();
+}
+
+function createListBar() {
+
+    const list = draftStore.lists[currentList];
+    const isActive = list.name === draftStore.active;
+
+    const bar = document.createElement("div");
+    bar.className = "list-bar";
+
+    const select = document.createElement("select");
+    select.className = "list-select";
+    select.setAttribute("aria-label", "Liste affichée");
+    draftStore.lists.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = item.name
+            + (item.name === draftStore.active ? " ★" : "")
+            + (item.template ? " (modèle)" : "");
+        option.selected = index === currentList;
+        select.appendChild(option);
+    });
+    select.addEventListener("change", () => {
+        showList(Number(select.value));
+        render();
+    });
+
+    const status = document.createElement("span");
+    status.className = "list-status";
+    if (isActive) {
+        status.textContent = "★ Active";
+        status.classList.add("active");
+    } else if (list.template) {
+        status.textContent = "Modèle";
+    }
+
+    const top = document.createElement("div");
+    top.className = "list-bar-top";
+    top.appendChild(select);
+    top.appendChild(status);
+
+    const actions = document.createElement("div");
+    actions.className = "list-actions";
+
+    function addAction(label, onClick, options = {}) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        button.disabled = Boolean(options.disabled);
+        if (options.title) button.title = options.title;
+        if (options.primary) button.classList.add("primary");
+        button.addEventListener("click", onClick);
+        actions.appendChild(button);
+    }
+
+    // Un modèle ne s'active pas : on en crée une copie.
+    if (list.template) {
+        addAction("Utiliser ce modèle", () => {
+            const name = askListName("Nom de la nouvelle liste :", "");
+            if (name) addList(name, cleanSections(list.sections));
+        }, { primary: true });
+    } else if (!isActive) {
+        addAction("Rendre active", () => {
+            draftStore.active = list.name;
+            setDirty(true);
+            render();
+        }, { primary: true });
+    }
+
+    addAction("Nouvelle", () => {
+        const name = askListName("Nom de la nouvelle liste :", "");
+        if (name) addList(name, []);
+    });
+
+    addAction("Dupliquer", () => {
+        const name = askListName("Nom de la copie :", `${list.name} (copie)`);
+        if (name) addList(name, cleanSections(list.sections));
+    });
+
+    addAction("Renommer", () => {
+        const name = askListName("Nouveau nom :", list.name, true);
+        if (!name || name === list.name) return;
+        if (isActive) draftStore.active = name;
+        list.name = name;
+        setDirty(true);
+        render();
+    });
+
+    addAction("Supprimer", () => {
+        if (!confirm(`Supprimer la liste « ${list.name} » ?`)) return;
+        draftStore.lists.splice(currentList, 1);
+        showList(draftStore.lists.findIndex(item => item.name === draftStore.active));
+        setDirty(true);
+        render();
+    }, {
+        disabled: isActive,
+        title: isActive ? "Rendez d'abord une autre liste active." : ""
+    });
+
+    bar.appendChild(top);
+    bar.appendChild(actions);
+
+    return bar;
 }
 
 function getPassword(forceAsk) {
@@ -372,10 +522,11 @@ async function save() {
 
     if (saving) return;
 
-    const cleaned = cleanDraft();
+    const cleaned = cleanDraftStore();
 
-    if (cleaned.some(section => section.name === "")) {
-        setEditStatus("Chaque rayon doit avoir un nom.", "error");
+    const unnamed = cleaned.lists.find(list => list.sections.some(section => section.name === ""));
+    if (unnamed) {
+        setEditStatus(`Chaque rayon doit avoir un nom (liste « ${unnamed.name} »).`, "error");
         return;
     }
 
@@ -395,7 +546,7 @@ async function save() {
                     "Content-Type": "application/json",
                     "X-Edit-Password": password
                 },
-                body: JSON.stringify({ sections: cleaned, sha: dataSha })
+                body: JSON.stringify({ store: cleaned, version: dataVersion })
             });
 
             const result = await response.json().catch(() => ({}));
@@ -415,8 +566,8 @@ async function save() {
                 return;
             }
 
-            sections = result.sections;
-            dataSha = result.sha;
+            setStore(result.store);
+            dataVersion = result.version;
             migrateCheckedItems();
             ensureSectionStates();
             exitEditMode();
@@ -438,12 +589,16 @@ function render() {
     editBar.hidden = !editMode;
     editBtn.classList.toggle("active", editMode);
 
+    activeListName.textContent = store && !editMode ? store.active : "";
+
     if (!editMode) {
         sections.forEach((section, sectionIndex) => {
             container.appendChild(createSection(section, sectionIndex));
         });
         return;
     }
+
+    container.appendChild(createListBar());
 
     draft.forEach((section, sectionIndex) => {
         container.appendChild(createEditSection(section, sectionIndex));
@@ -488,6 +643,11 @@ window.addEventListener("beforeunload", event => {
 });
 
 
+function setStore(value) {
+    store = value;
+    sections = store.lists.find(list => list.name === store.active).sections;
+}
+
 async function loadSections() {
 
     // Sur Vercel : lecture à jour depuis GitHub, édition possible.
@@ -495,21 +655,22 @@ async function loadSections() {
         const response = await fetch("/api/data", { cache: "no-store" });
         if (response.ok) {
             const result = await response.json();
-            dataSha = result.sha;
+            setStore(result.store);
+            dataVersion = result.version;
             editBtn.hidden = false;
-            return result.sections;
+            return;
         }
     } catch {
         // Pas d'API (serveur statique local) : lecture seule.
     }
 
     const response = await fetch("data.json");
-    return response.json();
+    sections = await response.json();
 }
 
 async function init() {
 
-    sections = await loadSections();
+    await loadSections();
 
     migrateCheckedItems();
     ensureSectionStates();

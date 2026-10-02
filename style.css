@@ -247,3 +247,85 @@ body.edit-mode {
     opacity: 0.6;
     cursor: wait;
 }
+
+/* Nom de la liste active, sous le titre */
+.active-list-name {
+    margin: -10px 0 0;
+    text-align: center;
+    color: #888;
+}
+
+.active-list-name:empty {
+    display: none;
+}
+
+/* Mode édition : choix de la liste enregistrée */
+.list-bar {
+    background: white;
+    margin: 12px 0;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.list-bar-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.list-select {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    background: white;
+}
+
+.list-status {
+    font-size: 14px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.list-status.active {
+    color: #2b6cb0;
+    font-weight: bold;
+}
+
+.list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.list-actions button {
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid #ccc;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.list-actions button:hover:not(:disabled) {
+    border-color: #2b6cb0;
+    color: #2b6cb0;
+}
+
+.list-actions button.primary {
+    background: #2b6cb0;
+    border-color: #2b6cb0;
+    color: white;
+}
+
+.list-actions button.primary:hover {
+    color: white;
+}
+
+.list-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

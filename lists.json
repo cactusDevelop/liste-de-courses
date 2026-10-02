@@ -1,0 +1,156 @@
+{
+  "active": "Ma liste",
+  "lists": [
+    {
+      "name": "Ma liste",
+      "sections": [
+        {
+          "name": "Fruits & légumes",
+          "items": [
+            "Fruits de saison",
+            "Gros Champignons Blancs",
+            "Concombre",
+            "Poivron",
+            "Echalottes"
+          ]
+        },
+        {
+          "name": "Produits frais",
+          "items": [
+            "Œufs",
+            "Yaourt nature",
+            "Tofu",
+            "Aiguillettes poulet/dinde",
+            "Brie"
+          ]
+        },
+        {
+          "name": "Épicerie",
+          "items": [
+            "Céréales (quinoa/muesli)",
+            "Chocolat noir ≥70 %",
+            "Lentilles (non)"
+          ]
+        },
+        {
+          "name": "Boissons",
+          "items": [
+            "Jus (pamplemousse ou orange)"
+          ]
+        },
+        {
+          "name": "Boulangerie",
+          "items": []
+        },
+        {
+          "name": "Pharmacie",
+          "items": [
+            "Désinfectant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Modèle Carrefour",
+      "template": true,
+      "sections": [
+        {
+          "name": "Fruits & légumes",
+          "items": []
+        },
+        {
+          "name": "Boulangerie & pâtisserie",
+          "items": []
+        },
+        {
+          "name": "Boucherie & volaille",
+          "items": []
+        },
+        {
+          "name": "Poissonnerie",
+          "items": []
+        },
+        {
+          "name": "Charcuterie & traiteur",
+          "items": []
+        },
+        {
+          "name": "Fromages",
+          "items": []
+        },
+        {
+          "name": "Crèmerie & produits laitiers",
+          "items": []
+        },
+        {
+          "name": "Œufs",
+          "items": []
+        },
+        {
+          "name": "Surgelés",
+          "items": []
+        },
+        {
+          "name": "Épicerie salée",
+          "items": []
+        },
+        {
+          "name": "Épicerie sucrée",
+          "items": []
+        },
+        {
+          "name": "Petit-déjeuner",
+          "items": []
+        },
+        {
+          "name": "Produits du monde",
+          "items": []
+        },
+        {
+          "name": "Bio & nutrition",
+          "items": []
+        },
+        {
+          "name": "Eaux, jus & sodas",
+          "items": []
+        },
+        {
+          "name": "Vins, bières & alcools",
+          "items": []
+        },
+        {
+          "name": "Bébé",
+          "items": []
+        },
+        {
+          "name": "Hygiène & beauté",
+          "items": []
+        },
+        {
+          "name": "Parapharmacie",
+          "items": []
+        },
+        {
+          "name": "Entretien & nettoyage",
+          "items": []
+        },
+        {
+          "name": "Papier & essuie-tout",
+          "items": []
+        },
+        {
+          "name": "Animalerie",
+          "items": []
+        },
+        {
+          "name": "Maison & cuisine",
+          "items": []
+        },
+        {
+          "name": "Papeterie & fournitures",
+          "items": []
+        }
+      ]
+    }
+  ]
+}
