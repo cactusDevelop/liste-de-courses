@@ -9,8 +9,7 @@
           "items": [
             "Fruits de saison",
             "Gros Champignons Blancs",
-            "Concombre",
-            "Echalottes"
+            "Concombre"
           ]
         },
         {
@@ -20,14 +19,14 @@
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
-            "Un Fromage",
-            "Parmigiano"
+            "Un Petit Fromage",
+            "Parmigiano (je l'ai oublié chez vous)"
           ]
         },
         {
           "name": "Épicerie",
           "items": [
-            "Céréales (quinoa/muesli)",
+            "Céréales (plus les mêmes svp)",
             "Chocolat noir ≥70 %",
             "Pâtes complètes"
           ]
@@ -35,7 +34,8 @@
         {
           "name": "Boissons",
           "items": [
-            "Jus (pamplemousse ou orange)"
+            "Jus (pamplemousse ou orange)",
+            "Eau (à la maison)"
           ]
         },
         {
