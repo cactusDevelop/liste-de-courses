@@ -43,5 +43,11 @@
       "Désinfectant",
       "Dentifrice"
     ]
+  },
+  {
+    "name": "Électronique",
+    "items": [
+      "Pile 9V"
+    ]
   }
 ]
