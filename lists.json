@@ -9,8 +9,7 @@
           "items": [
             "Fruits de saison",
             "Gros Champignons Blancs",
-            "Concombre",
-            "1 Citron BIO"
+            "Concombre"
           ]
         },
         {
@@ -20,25 +19,20 @@
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
-            "Un Petit Fromage",
-            "Parmigiano (je l'ai oublié chez vous)",
-            "1 kg de fromage blanc",
-            "200g Crème liquide entière"
+            "Un Petit Fromage"
           ]
         },
         {
           "name": "Épicerie",
           "items": [
             "Céréales (plus les mêmes svp)",
-            "Chocolat noir ≥70 %",
-            "280g de spéculoos"
+            "Chocolat noir ≥70 %"
           ]
         },
         {
           "name": "Boissons",
           "items": [
-            "Jus (pamplemousse ou orange)",
-            "Eau (à la maison)"
+            "Jus (pamplemousse ou orange)"
           ]
         },
         {
@@ -48,14 +42,7 @@
         {
           "name": "Pharmacie",
           "items": [
-            "Désinfectant",
-            "Dentifrice"
-          ]
-        },
-        {
-          "name": "Électronique",
-          "items": [
-            "Pile 9V"
+            "Désinfectant"
           ]
         }
       ]
