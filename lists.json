@@ -36,8 +36,10 @@
           ]
         },
         {
-          "name": "Boulangerie",
-          "items": []
+          "name": "Cosmétiques",
+          "items": [
+            "Boîtes à mouchoir"
+          ]
         },
         {
           "name": "Pharmacie",
