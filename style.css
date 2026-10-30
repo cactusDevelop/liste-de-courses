@@ -361,6 +361,30 @@ body.edit-mode {
     cursor: wait;
 }
 
+.edit-bar .history-btn {
+    padding: 10px 12px;
+    flex-shrink: 0;
+}
+
+.edit-bar .history-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .edit-bar {
+        flex-wrap: wrap;
+    }
+
+    .edit-status {
+        flex-basis: 100%;
+    }
+
+    .edit-status:empty {
+        display: none;
+    }
+}
+
 /* Nom de la liste active, sous le titre */
 .active-list-name {
     margin: -10px 0 0;

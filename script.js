@@ -4,6 +4,8 @@ const editBar = document.getElementById("edit-bar");
 const editStatus = document.getElementById("edit-status");
 const saveBtn = document.getElementById("save-btn");
 const cancelBtn = document.getElementById("cancel-btn");
+const undoBtn = document.getElementById("undo-btn");
+const redoBtn = document.getElementById("redo-btn");
 const activeListName = document.getElementById("active-list-name");
 
 // Rayons de la liste active, affichés hors mode édition.
@@ -27,6 +29,15 @@ let draft = []; // rayons de la liste affichée : draftStore.lists[currentList].
 let dirty = false;
 let saving = false;
 let pendingFocus = null; // { sectionIndex, itemIndex | "name", atEnd }
+
+// Annuler/rétablir (mode édition) : états successifs du brouillon, sérialisés.
+const MAX_HISTORY = 200;
+const TYPING_PAUSE = 500; // ms sans frappe avant de créer un point d'historique
+
+let history = []; // [{ store, list }], list : liste affichée à ce moment-là
+let historyIndex = 0;
+let historyTimer = null;
+let initialDraft = null; // état à l'ouverture, pour savoir s'il reste des changements
 
 // Cases cochées, identifiées par "rayon\narticle" pour résister aux
 // ajouts, suppressions et déplacements d'articles.
@@ -199,6 +210,23 @@ function createEditable(className, text, placeholder, onChange) {
     span.addEventListener("input", () => {
         onChange(span.textContent);
         setDirty(true);
+        undoBtn.disabled = false;
+        clearTimeout(historyTimer);
+        historyTimer = setTimeout(commitHistory, TYPING_PAUSE);
+    });
+
+    span.addEventListener("blur", commitHistory);
+
+    // Ces touches modifient la structure : le texte saisi juste avant
+    // doit rester un point d'historique à part.
+    span.addEventListener("keydown", event => {
+        if (
+            event.key === "Enter" ||
+            moveShortcutDirection(event) ||
+            (event.key === "Backspace" && isEmptyText(span))
+        ) {
+            commitHistory();
+        }
     });
 
     // Coller sans mise en forme, et sur une seule ligne.
@@ -807,6 +835,90 @@ document.addEventListener("keydown", event => {
 });
 
 
+// ---------- Annuler / rétablir (mode édition) ----------
+
+function resetHistory() {
+    clearTimeout(historyTimer);
+    initialDraft = JSON.stringify(draftStore);
+    history = [{ store: initialDraft, list: currentList }];
+    historyIndex = 0;
+    updateHistoryButtons();
+}
+
+function updateHistoryButtons() {
+    undoBtn.disabled = historyIndex === 0;
+    redoBtn.disabled = historyIndex === history.length - 1;
+}
+
+// Ajoute un point d'historique si le brouillon a changé depuis le dernier.
+function commitHistory() {
+
+    clearTimeout(historyTimer);
+    if (!editMode) return;
+
+    const current = JSON.stringify(draftStore);
+    if (current === history[historyIndex].store) return;
+
+    history = history.slice(0, historyIndex + 1);
+    history.push({ store: current, list: currentList });
+    if (history.length > MAX_HISTORY) history.shift();
+    historyIndex = history.length - 1;
+
+    updateHistoryButtons();
+}
+
+function goToHistory(index) {
+
+    const from = history[historyIndex];
+    const to = history[index];
+
+    // Rester sur la liste concernée par le changement annulé, sauf si le
+    // changement ajoutait ou supprimait une liste.
+    const before = JSON.parse(from.store).lists.length;
+    draftStore = JSON.parse(to.store);
+    showList(draftStore.lists.length === before ? from.list : to.list);
+
+    historyIndex = index;
+    setDirty(to.store !== initialDraft);
+    updateHistoryButtons();
+
+    const focused = document.activeElement?.dataset;
+    if (focused?.section !== undefined) {
+        pendingFocus = { sectionIndex: focused.section, itemIndex: focused.item, atEnd: true };
+    }
+    render();
+}
+
+function undo() {
+    if (saving || drag) return;
+    commitHistory();
+    if (historyIndex > 0) goToHistory(historyIndex - 1);
+}
+
+function redo() {
+    if (saving || drag) return;
+    commitHistory();
+    if (historyIndex < history.length - 1) goToHistory(historyIndex + 1);
+}
+
+document.addEventListener("keydown", event => {
+
+    if (!editMode || !(event.ctrlKey || event.metaKey)) return;
+
+    // Le choix d'image a ses propres champs : leur Ctrl+Z reste celui du navigateur.
+    if (event.target.closest?.("dialog")) return;
+
+    const key = event.key.toLowerCase();
+    if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+    } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        redo();
+    }
+});
+
+
 function applyPendingFocus() {
 
     if (!pendingFocus) return;
@@ -838,10 +950,12 @@ function enterEditMode() {
     showList(draftStore.lists.findIndex(list => list.name === draftStore.active));
     editMode = true;
     setDirty(false);
+    resetHistory();
     render();
 }
 
 function exitEditMode() {
+    clearTimeout(historyTimer);
     editMode = false;
     draftStore = null;
     draft = [];
@@ -1110,6 +1224,9 @@ function render() {
         return;
     }
 
+    // Toute modification de structure passe par render().
+    commitHistory();
+
     container.appendChild(createListBar());
 
     draft.forEach((section, sectionIndex) => {
@@ -1147,6 +1264,8 @@ cancelBtn.addEventListener("click", () => {
 });
 
 saveBtn.addEventListener("click", save);
+undoBtn.addEventListener("click", undo);
+redoBtn.addEventListener("click", redo);
 
 window.addEventListener("beforeunload", event => {
     if (editMode && dirty) {
