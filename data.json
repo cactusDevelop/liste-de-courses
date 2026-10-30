@@ -23,9 +23,12 @@
     "items": [
       "Céréales (plus les mêmes par pitié !)",
       "Chocolat noir ≥70 %",
-      "Pâtes complètes",
+      "Pâtes complètes (Penne)",
       "Conserves de Légume"
-    ]
+    ],
+    "images": {
+      "Pâtes complètes (Penne)": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Penne_Arrabbiata.jpg/250px-Penne_Arrabbiata.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    }
   },
   {
     "name": "Boissons",
