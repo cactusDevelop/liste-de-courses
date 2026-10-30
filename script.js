@@ -22,6 +22,8 @@ let editMode = false;
 let draftStore = null;
 let currentList = 0;
 let draft = []; // rayons de la liste affichée : draftStore.lists[currentList].sections
+// Dans le brouillon, les articles sont des objets { text, image } : l'image
+// suit ainsi l'article quand il est renommé ou déplacé d'un rayon à l'autre.
 let dirty = false;
 let saving = false;
 let pendingFocus = null; // { sectionIndex, itemIndex | "name", atEnd }
@@ -99,9 +101,28 @@ function toggleItem(id) {
 }
 
 
-function createItem(sectionName, text) {
+// Image associée à un article, ou null. section.images est optionnel.
+function itemImage(section, text) {
+    return Object.hasOwn(section.images ?? {}, text) ? section.images[text] : null;
+}
 
-    const id = itemKey(sectionName, text);
+function createThumbnail(url) {
+
+    const image = document.createElement("img");
+    image.className = "item-image";
+    image.src = url;
+    image.alt = "";
+    image.loading = "lazy";
+    // Certains sites refusent les images demandées depuis un autre site.
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => image.remove());
+
+    return image;
+}
+
+function createItem(section, text) {
+
+    const id = itemKey(section.name, text);
     const isChecked = checkedItems.includes(id);
 
     const li = document.createElement("li");
@@ -119,6 +140,8 @@ function createItem(sectionName, text) {
     span.textContent = text;
 
     li.appendChild(checkbox);
+    const image = itemImage(section, text);
+    if (image) li.appendChild(createThumbnail(image));
     li.appendChild(span);
 
     return li;
@@ -141,7 +164,7 @@ function createSection(section, sectionIndex) {
 
     const ul = document.createElement("ul");
     section.items.forEach(text => {
-        ul.appendChild(createItem(section.name, text));
+        ul.appendChild(createItem(section, text));
     });
 
     details.appendChild(summary);
@@ -199,19 +222,27 @@ function createEditItem(sectionIndex, itemIndex) {
 
     const text = createEditable(
         "item-text",
-        draft[sectionIndex].items[itemIndex],
+        draft[sectionIndex].items[itemIndex].text,
         "Nouvel article",
-        value => { draft[sectionIndex].items[itemIndex] = value; }
+        value => { draft[sectionIndex].items[itemIndex].text = value; }
     );
     text.dataset.section = sectionIndex;
     text.dataset.item = itemIndex;
 
     text.addEventListener("keydown", event => {
 
+        // Ctrl+Maj+↑/↓ : déplacer l'article, comme dans Notion.
+        const direction = moveShortcutDirection(event);
+        if (direction) {
+            event.preventDefault();
+            moveItemBy(sectionIndex, itemIndex, direction);
+            return;
+        }
+
         // Entrée : nouvel article juste en dessous.
         if (event.key === "Enter") {
             event.preventDefault();
-            draft[sectionIndex].items.splice(itemIndex + 1, 0, "");
+            draft[sectionIndex].items.splice(itemIndex + 1, 0, { text: "", image: null });
             setDirty(true);
             pendingFocus = { sectionIndex, itemIndex: itemIndex + 1 };
             render();
@@ -232,10 +263,176 @@ function createEditItem(sectionIndex, itemIndex) {
     remove.textContent = "×";
     remove.addEventListener("click", () => removeItem(sectionIndex, itemIndex));
 
+    li.appendChild(createDragHandle("item", sectionIndex, itemIndex));
+    li.appendChild(createImageButton(draft[sectionIndex].items[itemIndex]));
     li.appendChild(text);
     li.appendChild(remove);
 
     return li;
+}
+
+// Vignette de l'article, ou icône s'il n'a pas d'image : ouvre le choix d'image.
+function createImageButton(item) {
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "icon-btn image-btn";
+    button.title = item.image ? "Changer l'image" : "Ajouter une image";
+    button.setAttribute("aria-label", button.title);
+    button.textContent = "🖼";
+    button.addEventListener("click", () => openImagePicker(item));
+
+    if (item.image) {
+        const image = createThumbnail(item.image);
+        image.addEventListener("load", () => { button.textContent = ""; button.appendChild(image); });
+        // Affichée seulement une fois chargée : sinon l'icône reste visible.
+        image.loading = "eager";
+    }
+
+    return button;
+}
+
+function setItemImage(item, url) {
+    item.image = url;
+    setDirty(true);
+    render();
+}
+
+async function searchImages(query) {
+
+    const response = await fetch(`/api/images?q=${encodeURIComponent(query)}`);
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || `Erreur ${response.status}`);
+    }
+    return result.results;
+}
+
+function openImagePicker(item) {
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "image-picker";
+
+    const form = document.createElement("form");
+    form.className = "image-search";
+
+    const input = document.createElement("input");
+    input.type = "search";
+    input.placeholder = "Rechercher une image";
+    input.setAttribute("aria-label", "Rechercher une image");
+    input.value = item.text.trim();
+
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "Rechercher";
+
+    form.appendChild(input);
+    form.appendChild(submit);
+
+    const status = document.createElement("p");
+    status.className = "image-status";
+
+    const results = document.createElement("div");
+    results.className = "image-results";
+
+    const urlForm = document.createElement("form");
+    urlForm.className = "image-search";
+
+    const urlInput = document.createElement("input");
+    urlInput.type = "url";
+    urlInput.placeholder = "Ou coller l'adresse d'une image (https://…)";
+    urlInput.setAttribute("aria-label", "Adresse d'une image");
+
+    const urlSubmit = document.createElement("button");
+    urlSubmit.type = "submit";
+    urlSubmit.textContent = "Utiliser";
+
+    urlForm.appendChild(urlInput);
+    urlForm.appendChild(urlSubmit);
+
+    const actions = document.createElement("div");
+    actions.className = "image-actions";
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Retirer l'image";
+    clear.disabled = !item.image;
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Fermer";
+
+    actions.appendChild(clear);
+    actions.appendChild(close);
+
+    function choose(url) {
+        dialog.close();
+        setItemImage(item, url);
+    }
+
+    let lastSearch = 0;
+
+    async function runSearch() {
+
+        const query = input.value.trim();
+        if (!query) return;
+
+        // Seule la dernière recherche lancée s'affiche.
+        const search = ++lastSearch;
+        status.textContent = "Recherche…";
+        results.innerHTML = "";
+
+        try {
+            const found = await searchImages(query);
+            if (search !== lastSearch) return;
+
+            status.textContent = found.length ? "" : "Aucune image trouvée.";
+            found.forEach(({ url, title }) => {
+                const option = document.createElement("button");
+                option.type = "button";
+                option.title = title;
+                option.setAttribute("aria-label", title);
+                option.addEventListener("click", () => choose(url));
+
+                const image = createThumbnail(url);
+                image.addEventListener("error", () => option.remove());
+
+                option.appendChild(image);
+                results.appendChild(option);
+            });
+        } catch (err) {
+            if (search === lastSearch) status.textContent = err.message;
+        }
+    }
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        runSearch();
+    });
+
+    urlForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const url = urlInput.value.trim();
+        if (!url.startsWith("https://")) {
+            status.textContent = "L'adresse doit commencer par https://";
+            return;
+        }
+        choose(url);
+    });
+
+    clear.addEventListener("click", () => choose(null));
+    close.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => dialog.remove());
+
+    dialog.appendChild(form);
+    dialog.appendChild(status);
+    dialog.appendChild(results);
+    dialog.appendChild(urlForm);
+    dialog.appendChild(actions);
+    document.body.appendChild(dialog);
+
+    dialog.showModal();
+    runSearch();
 }
 
 function removeItem(sectionIndex, itemIndex) {
@@ -267,10 +464,19 @@ function createEditSection(section, sectionIndex) {
     name.dataset.item = "name";
 
     name.addEventListener("keydown", event => {
+
+        // Ctrl+Maj+↑/↓ : déplacer le rayon.
+        const direction = moveShortcutDirection(event);
+        if (direction) {
+            event.preventDefault();
+            moveSection(sectionIndex, direction < 0 ? sectionIndex - 1 : sectionIndex + 2);
+            return;
+        }
+
         if (event.key === "Enter") {
             event.preventDefault();
             if (draft[sectionIndex].items.length === 0) {
-                draft[sectionIndex].items.push("");
+                draft[sectionIndex].items.push({ text: "", image: null });
                 setDirty(true);
             }
             pendingFocus = { sectionIndex, itemIndex: 0 };
@@ -294,6 +500,7 @@ function createEditSection(section, sectionIndex) {
         render();
     });
 
+    header.appendChild(createDragHandle("section", sectionIndex));
     header.appendChild(name);
     header.appendChild(remove);
 
@@ -307,7 +514,7 @@ function createEditSection(section, sectionIndex) {
     addItem.className = "add-btn";
     addItem.textContent = "+ Ajouter un article";
     addItem.addEventListener("click", () => {
-        draft[sectionIndex].items.push("");
+        draft[sectionIndex].items.push({ text: "", image: null });
         setDirty(true);
         pendingFocus = { sectionIndex, itemIndex: draft[sectionIndex].items.length - 1 };
         render();
@@ -319,6 +526,286 @@ function createEditSection(section, sectionIndex) {
 
     return wrapper;
 }
+
+// ---------- Déplacement des articles et des rayons (mode édition) ----------
+
+// Les positions cibles sont des points d'insertion comptés avant de retirer
+// l'élément déplacé : 0 = tout en haut, longueur = tout en bas.
+
+function moveItem(fromSection, fromIndex, toSection, toIndex, focus = true) {
+
+    if (toSection === fromSection && (toIndex === fromIndex || toIndex === fromIndex + 1)) {
+        return;
+    }
+
+    const [text] = draft[fromSection].items.splice(fromIndex, 1);
+    if (toSection === fromSection && toIndex > fromIndex) toIndex--;
+    draft[toSection].items.splice(toIndex, 0, text);
+
+    setDirty(true);
+    if (focus) pendingFocus = { sectionIndex: toSection, itemIndex: toIndex, atEnd: true };
+    render();
+}
+
+function moveSection(fromIndex, toIndex, focus = true) {
+
+    if (toIndex < 0 || toIndex > draft.length || toIndex === fromIndex || toIndex === fromIndex + 1) {
+        return;
+    }
+
+    const [section] = draft.splice(fromIndex, 1);
+    if (toIndex > fromIndex) toIndex--;
+    draft.splice(toIndex, 0, section);
+
+    setDirty(true);
+    if (focus) pendingFocus = { sectionIndex: toIndex, itemIndex: "name", atEnd: true };
+    render();
+}
+
+// Un cran vers le haut ou le bas ; en bout de rayon, passe au rayon voisin.
+function moveItemBy(sectionIndex, itemIndex, direction) {
+
+    const items = draft[sectionIndex].items;
+
+    if (direction < 0 && itemIndex > 0) {
+        moveItem(sectionIndex, itemIndex, sectionIndex, itemIndex - 1);
+    } else if (direction > 0 && itemIndex < items.length - 1) {
+        moveItem(sectionIndex, itemIndex, sectionIndex, itemIndex + 2);
+    } else if (direction < 0 && sectionIndex > 0) {
+        moveItem(sectionIndex, itemIndex, sectionIndex - 1, draft[sectionIndex - 1].items.length);
+    } else if (direction > 0 && sectionIndex < draft.length - 1) {
+        moveItem(sectionIndex, itemIndex, sectionIndex + 1, 0);
+    }
+}
+
+function moveShortcutDirection(event) {
+    if (!(event.ctrlKey || event.metaKey) || !event.shiftKey) return 0;
+    if (event.key === "ArrowUp") return -1;
+    if (event.key === "ArrowDown") return 1;
+    return 0;
+}
+
+
+// Glisser-déposer à la Notion, par la poignée ⠿. Événements pointeur plutôt
+// que le glisser-déposer HTML natif, qui ne marche pas au doigt sur mobile.
+
+const DRAG_THRESHOLD = 4; // px avant que l'appui devienne un déplacement
+const AUTO_SCROLL_EDGE = 60; // px du bord de l'écran où la page défile
+
+let drag = null;
+
+function createDragHandle(kind, sectionIndex, itemIndex) {
+
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.textContent = "⠿";
+    handle.title = "Glisser pour déplacer (ou Ctrl+Maj+↑/↓)";
+    handle.setAttribute("aria-hidden", "true");
+
+    handle.addEventListener("pointerdown", event => {
+        if (event.button !== 0 || saving) return;
+        event.preventDefault();
+        endDrag(false);
+        drag = {
+            kind,
+            sectionIndex,
+            itemIndex,
+            pointerId: event.pointerId,
+            source: handle.closest(kind === "item" ? "li" : ".section"),
+            startX: event.clientX,
+            startY: event.clientY,
+            x: event.clientX,
+            y: event.clientY,
+            started: false,
+            target: null
+        };
+        // Suivi sur tout le document : le pointeur quitte vite la poignée.
+        document.addEventListener("pointermove", onDragMove);
+        document.addEventListener("pointerup", onDragUp);
+        document.addEventListener("pointercancel", onDragCancel);
+    });
+
+    return handle;
+}
+
+function onDragMove(event) {
+
+    if (event.pointerId !== drag.pointerId) return;
+    drag.x = event.clientX;
+    drag.y = event.clientY;
+
+    if (!drag.started) {
+        if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) < DRAG_THRESHOLD) return;
+        startDrag();
+    }
+
+    positionGhost();
+    updateDropTarget();
+}
+
+function onDragUp(event) {
+    if (event.pointerId === drag.pointerId) endDrag(true);
+}
+
+function onDragCancel(event) {
+    if (event.pointerId === drag.pointerId) endDrag(false);
+}
+
+function startDrag() {
+
+    const rect = drag.source.getBoundingClientRect();
+    drag.started = true;
+    drag.offsetX = drag.startX - rect.left;
+    drag.offsetY = drag.startY - rect.top;
+
+    // Copie inerte de l'élément, qui suit le pointeur.
+    const ghost = drag.source.cloneNode(true);
+    ghost.classList.add("drag-ghost");
+    ghost.style.width = `${rect.width}px`;
+    ghost.querySelectorAll("[contenteditable]").forEach(el => {
+        el.removeAttribute("contenteditable");
+        delete el.dataset.section;
+        delete el.dataset.item;
+    });
+    document.body.appendChild(ghost);
+    drag.ghost = ghost;
+
+    const indicator = document.createElement("div");
+    indicator.className = "drop-indicator";
+    indicator.hidden = true;
+    document.body.appendChild(indicator);
+    drag.indicator = indicator;
+
+    drag.source.classList.add("drag-source");
+    document.body.classList.add("dragging");
+    document.activeElement?.blur();
+
+    drag.frame = requestAnimationFrame(autoScroll);
+}
+
+function positionGhost() {
+    drag.ghost.style.left = `${drag.x - drag.offsetX}px`;
+    drag.ghost.style.top = `${drag.y - drag.offsetY}px`;
+}
+
+// Index du premier élément dont le milieu est sous le pointeur.
+function insertionIndex(elements, y) {
+    const index = elements.findIndex(el => {
+        const rect = el.getBoundingClientRect();
+        return y < rect.top + rect.height / 2;
+    });
+    return index === -1 ? elements.length : index;
+}
+
+function updateDropTarget() {
+
+    const wrappers = [...container.querySelectorAll(".section.editing")];
+    let target = null;
+    let line = null; // { top, left, width } de la ligne bleue
+
+    if (drag.kind === "section") {
+
+        const index = insertionIndex(wrappers, drag.y);
+        target = { index };
+
+        const anchor = wrappers[Math.min(index, wrappers.length - 1)].getBoundingClientRect();
+        line = {
+            top: index < wrappers.length ? anchor.top - 6 : anchor.bottom + 6,
+            left: anchor.left,
+            width: anchor.width
+        };
+
+        if (index === drag.sectionIndex || index === drag.sectionIndex + 1) target = null;
+
+    } else {
+
+        // Rayon survolé (ou le plus proche), puis position dans ce rayon.
+        let sectionIndex = wrappers.findIndex(w => drag.y < w.getBoundingClientRect().bottom + 6);
+        if (sectionIndex === -1) sectionIndex = wrappers.length - 1;
+
+        const ul = wrappers[sectionIndex].querySelector("ul");
+        const rows = [...ul.children];
+        const index = insertionIndex(rows, drag.y);
+        target = { sectionIndex, index };
+
+        const ulRect = ul.getBoundingClientRect();
+        line = { left: ulRect.left + 15, width: ulRect.width - 30 };
+        if (rows.length === 0) {
+            line.top = ulRect.top + 4;
+        } else if (index < rows.length) {
+            line.top = rows[index].getBoundingClientRect().top - 4;
+        } else {
+            line.top = rows[rows.length - 1].getBoundingClientRect().bottom + 3;
+        }
+
+        if (
+            sectionIndex === drag.sectionIndex &&
+            (index === drag.itemIndex || index === drag.itemIndex + 1)
+        ) {
+            target = null;
+        }
+    }
+
+    drag.target = target;
+    drag.indicator.hidden = !target;
+    if (target) {
+        drag.indicator.style.top = `${line.top - 1.5}px`;
+        drag.indicator.style.left = `${line.left}px`;
+        drag.indicator.style.width = `${line.width}px`;
+    }
+}
+
+// Fait défiler la page quand le pointeur approche du haut ou du bas.
+function autoScroll() {
+
+    if (!drag?.started) return;
+
+    const top = AUTO_SCROLL_EDGE;
+    const bottom = editBar.getBoundingClientRect().top - AUTO_SCROLL_EDGE;
+    let speed = 0;
+    if (drag.y < top) speed = -(top - drag.y) / 3;
+    if (drag.y > bottom) speed = (drag.y - bottom) / 3;
+
+    if (speed !== 0) {
+        window.scrollBy(0, speed);
+        updateDropTarget();
+    }
+
+    drag.frame = requestAnimationFrame(autoScroll);
+}
+
+function endDrag(drop) {
+
+    if (!drag) return;
+
+    const { started, target, kind, sectionIndex, itemIndex } = drag;
+
+    document.removeEventListener("pointermove", onDragMove);
+    document.removeEventListener("pointerup", onDragUp);
+    document.removeEventListener("pointercancel", onDragCancel);
+
+    if (started) {
+        cancelAnimationFrame(drag.frame);
+        drag.ghost.remove();
+        drag.indicator.remove();
+        drag.source.classList.remove("drag-source");
+        document.body.classList.remove("dragging");
+    }
+    drag = null;
+
+    if (!started || !drop || !target) return;
+
+    if (kind === "section") {
+        moveSection(sectionIndex, target.index, false);
+    } else {
+        moveItem(sectionIndex, itemIndex, target.sectionIndex, target.index, false);
+    }
+}
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && drag) endDrag(false);
+});
+
 
 function applyPendingFocus() {
 
@@ -344,7 +831,10 @@ function applyPendingFocus() {
 }
 
 function enterEditMode() {
-    draftStore = JSON.parse(JSON.stringify(store));
+    draftStore = {
+        active: store.active,
+        lists: store.lists.map(list => ({ ...list, sections: toDraftSections(list.sections) }))
+    };
     showList(draftStore.lists.findIndex(list => list.name === draftStore.active));
     editMode = true;
     setDirty(false);
@@ -359,11 +849,33 @@ function exitEditMode() {
     render();
 }
 
-function cleanSections(sectionList) {
+function toDraftSections(sectionList) {
     return sectionList.map(section => ({
-        name: section.name.trim(),
-        items: section.items.map(item => item.trim()).filter(item => item !== "")
+        name: section.name,
+        items: section.items.map(text => ({ text, image: itemImage(section, text) }))
     }));
+}
+
+function copyDraftSections(sectionList) {
+    return JSON.parse(JSON.stringify(sectionList));
+}
+
+function cleanSections(sectionList) {
+    return sectionList.map(section => {
+
+        const items = section.items
+            .map(item => ({ ...item, text: item.text.trim() }))
+            .filter(item => item.text !== "");
+        const withImage = items.filter(item => item.image);
+
+        return {
+            name: section.name.trim(),
+            items: items.map(item => item.text),
+            ...(withImage.length > 0
+                ? { images: Object.fromEntries(withImage.map(item => [item.text, item.image])) }
+                : {})
+        };
+    });
 }
 
 function cleanDraftStore() {
@@ -460,7 +972,7 @@ function createListBar() {
     if (list.template) {
         addAction("Utiliser ce modèle", () => {
             const name = askListName("Nom de la nouvelle liste :", "");
-            if (name) addList(name, cleanSections(list.sections));
+            if (name) addList(name, copyDraftSections(list.sections));
         }, { primary: true });
     } else if (!isActive) {
         addAction("Rendre active", () => {
@@ -477,7 +989,7 @@ function createListBar() {
 
     addAction("Dupliquer", () => {
         const name = askListName("Nom de la copie :", `${list.name} (copie)`);
-        if (name) addList(name, cleanSections(list.sections));
+        if (name) addList(name, copyDraftSections(list.sections));
     });
 
     addAction("Renommer", () => {

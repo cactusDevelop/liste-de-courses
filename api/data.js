@@ -4,8 +4,8 @@
 //
 // Fichiers concernés :
 //   lists.json  toutes les listes enregistrées + le nom de la liste active
-//   data.json   copie de la liste active (format historique, lu par l'app
-//               éditeur et par le site en mode statique)
+//   data.json   copie de la liste active (format historique, lu par le site
+//               en mode statique)
 //
 // Variables d'environnement (à définir dans Vercel) :
 //   GITHUB_TOKEN   jeton GitHub avec le droit "Contents: read & write" sur le dépôt
@@ -58,6 +58,18 @@ function validateSections(sections) {
         for (const item of section.items) {
             if (typeof item !== "string") {
                 throw new Error("Format invalide : chaque article doit être du texte.");
+            }
+        }
+
+        // Images optionnelles, par texte d'article.
+        if (section.images !== undefined) {
+            if (!section.images || typeof section.images !== "object" || Array.isArray(section.images)) {
+                throw new Error("Format invalide : « images » doit associer des articles à des adresses.");
+            }
+            for (const url of Object.values(section.images)) {
+                if (typeof url !== "string" || !url.startsWith("https://")) {
+                    throw new Error("Format invalide : chaque image doit être une adresse https.");
+                }
             }
         }
     }
@@ -136,7 +148,7 @@ async function readFromGitHub(ref = BRANCH) {
     }
 
     // data.json fait foi pour la liste active : il a pu être modifié
-    // directement (app éditeur, commit manuel) sans passer par lists.json.
+    // directement (commit manuel) sans passer par lists.json.
     store.lists.find(list => list.name === store.active).sections = data.value;
 
     return {
@@ -258,7 +270,7 @@ async function handlePut(req, res) {
 
     const result = await writeToGitHub(clean, version);
 
-    // Les fichiers ont changé entre-temps (autre appareil, app éditeur...).
+    // Les fichiers ont changé entre-temps (autre appareil, commit manuel...).
     if (result.conflict) {
         res.status(409).json({
             error: "La liste a été modifiée ailleurs entre-temps. Rechargez la page puis refaites vos changements."
