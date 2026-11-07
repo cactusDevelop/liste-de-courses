@@ -10,7 +10,9 @@
             "Fruits de saison",
             "Gros Champignons Blancs",
             "Concombre",
-            "Échalottes"
+            "Échalottes",
+            "Poivron",
+            "1 Citron Bio"
           ]
         },
         {
@@ -19,16 +21,26 @@
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
-            "Un Petit Fromage"
-          ]
+            "Un Petit Fromage",
+            "Fromage Blanc (1kg)",
+            "Crème liquide entière 30 % (200g)"
+          ],
+          "images": {
+            "Fromage Blanc (1kg)": "https://images.openfoodfacts.org/images/products/325/039/204/9881/front_fr.38.200.jpg"
+          }
         },
         {
           "name": "Épicerie",
           "items": [
             "Cornflakes (pas beaucoup)",
-            "Chocolat noir ≥70 %",
+            "Chocolat noir (≥70 %)",
+            "Spéculoos (250g)",
             "Conserves de Légume"
-          ]
+          ],
+          "images": {
+            "Chocolat noir (≥70 %)": "https://images.openfoodfacts.org/images/products/347/773/000/1206/front.18.200.jpg",
+            "Spéculoos (250g)": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Vermeiren_speculoos_03.jpg/250px-Vermeiren_speculoos_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+          }
         },
         {
           "name": "Boissons",
