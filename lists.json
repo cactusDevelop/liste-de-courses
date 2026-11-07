@@ -7,7 +7,7 @@
         {
           "name": "Fruits & légumes",
           "items": [
-            "Fruits de saison (pas d'Espagne les kakis)",
+            "Fruits de saison",
             "Gros Champignons Blancs",
             "Concombre",
             "Échalottes"
@@ -16,7 +16,6 @@
         {
           "name": "Produits frais",
           "items": [
-            "Œufs",
             "Yaourt nature",
             "Tofu",
             "Aiguillettes poulet/dinde",
@@ -26,14 +25,10 @@
         {
           "name": "Épicerie",
           "items": [
-            "Cornflakes",
+            "Cornflakes (pas beaucoup)",
             "Chocolat noir ≥70 %",
-            "Penne complètes",
             "Conserves de Légume"
-          ],
-          "images": {
-            "Penne complètes": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Penne_Arrabbiata.jpg/250px-Penne_Arrabbiata.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
-          }
+          ]
         },
         {
           "name": "Boissons",
