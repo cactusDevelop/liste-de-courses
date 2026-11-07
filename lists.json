@@ -172,9 +172,10 @@
         {
           "name": "Épicerie",
           "items": [
-            "Céréales (quinoa/muesli)",
+            "Céréales (quinoa/muesli/Cornflakes)",
             "Chocolat noir ≥70 %",
-            "Lentilles"
+            "Lentilles",
+            "Conserves de légumes"
           ]
         },
         {
