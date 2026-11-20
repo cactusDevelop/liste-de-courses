@@ -12,21 +12,27 @@
   {
     "name": "Produits frais",
     "items": [
+      "Oeufs",
       "Yaourt nature",
       "Tofu",
       "Aiguillettes poulet/dinde",
-      "Un Petit Fromage"
+      "Un Petit Fromage",
+      "Crème entière 35 % 100 g",
+      "Beurre"
     ]
   },
   {
     "name": "Épicerie",
     "items": [
-      "Chocolat noir (≥70 %)",
+      "Chocolat noir (≥70 %) pour moi",
+      "Chocolat à 72 % 80 g",
+      "Chocolat à 49 % 120 g",
       "Conserves de Légume",
-      "Miel"
+      "Miel",
+      "Sucre glace"
     ],
     "images": {
-      "Chocolat noir (≥70 %)": "https://images.openfoodfacts.org/images/products/347/773/000/1206/front.18.200.jpg"
+      "Chocolat noir (≥70 %) pour moi": "https://images.openfoodfacts.org/images/products/347/773/000/1206/front.18.200.jpg"
     }
   },
   {
